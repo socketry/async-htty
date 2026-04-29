@@ -4,5 +4,6 @@
 # Copyright, 2026, by Samuel Williams.
 
 require_relative "htty/version"
+require_relative "htty/error"
 require_relative "htty/protocol"
 require_relative "htty/server"

@@ -5,6 +5,13 @@
 
 module Async
 	module HTTY
-		VERSION = "0.0.0"
+		class Error < StandardError
+		end
+		
+		class UnsupportedError < Error
+		end
+		
+		class DisabledError < UnsupportedError
+		end
 	end
 end

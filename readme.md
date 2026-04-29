@@ -1,10 +1,49 @@
 # Async::HTTY
 
-`async-htty` adapts `Protocol::HTTY::Stream` into an Async-compatible HTTP/2 connection so terminal sessions can host `Protocol::HTTP::Middleware` applications.
+`async-htty` adapts `Protocol::HTTY::Stream` into an Async-compatible HTTP/2 connection so terminal sessions can bootstrap HTTY and host `Protocol::HTTP::Middleware` applications over the resulting raw byte stream.
 
-The first implementation keeps the layering explicit:
+[![Development Status](https://github.com/socketry/async-htty/workflows/Test/badge.svg)](https://github.com/socketry/async-htty/actions?workflow=Test)
 
-- `protocol-htty` owns the terminal-safe byte transport.
-- `protocol-http2` owns the HTTP/2 wire semantics.
-- `async-http` owns the HTTP request and response mapping.
-- `async-htty` only connects those layers for one TTY session.
+## Usage
+
+Please see the [project documentation](https://socketry.github.io/async-htty/) for more details.
+
+	- [Getting Started](https://socketry.github.io/async-htty/guides/getting-started/index) - This guide explains how to run an `Async::HTTY` server and serve a simple HTTP/2 application over HTTY.
+
+## Releases
+
+There are no documented releases.
+
+## Contributing
+
+We welcome contributions to this project.
+
+1.  Fork it.
+2.  Create your feature branch (`git checkout -b my-new-feature`).
+3.  Commit your changes (`git commit -am 'Add some feature'`).
+4.  Push to the branch (`git push origin my-new-feature`).
+5.  Create new Pull Request.
+
+### Running Tests
+
+To run the test suite:
+
+``` shell
+bundle exec sus
+```
+
+### Making Releases
+
+To make a new release:
+
+``` shell
+bundle exec bake gem:release:patch # or minor or major
+```
+
+### Developer Certificate of Origin
+
+In order to protect users of this project, we require all contributors to comply with the [Developer Certificate of Origin](https://developercertificate.org/). This ensures that all contributions are properly licensed and attributed.
+
+### Community Guidelines
+
+This project is best served by a collaborative and respectful environment. Treat each other professionally, respect differing viewpoints, and engage constructively. Harassment, discrimination, or harmful behavior is not tolerated. Communicate clearly, listen actively, and support one another. If any issues arise, please inform the project maintainers.

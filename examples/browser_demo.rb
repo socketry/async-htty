@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Released under the MIT License.
+# Copyright, 2026, by Samuel Williams.
+
 require "async"
 require "async/htty"
 require "protocol/http/response"
@@ -76,10 +79,8 @@ app = Protocol::HTTP::Middleware.for do |request|
 			</body>
 		</html>
 	HTML
-
+	
 	Protocol::HTTP::Response[200, [["content-type", "text/html; charset=utf-8"]], [body]]
 end
 
-Sync do
-	Async::HTTY::Server.open(app)
-end
+Async::HTTY::Server.open(app)

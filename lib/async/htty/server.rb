@@ -3,76 +3,68 @@
 # Released under the MIT License.
 # Copyright, 2026, by Samuel Williams.
 
+require "async"
 require "io/console"
 require "protocol/http/middleware"
 
+require_relative "error"
 require_relative "protocol"
 
 module Async
 	module HTTY
 		class Server < ::Protocol::HTTP::Middleware
-			class RawInput
-				INTERRUPT_CHARACTER = "\u0003".b
-
-				def initialize(input)
-					@input = input
-				end
-
-				def read(length = nil, *arguments)
-					chunk = @input.read(length, *arguments)
-					return chunk unless chunk&.include?(INTERRUPT_CHARACTER)
-
-					raise Interrupt, "HTTY session interrupted"
-				end
-
-				def method_missing(name, *arguments, **options, &block)
-					@input.public_send(name, *arguments, **options, &block)
-				end
-
-				def respond_to_missing?(name, include_private = false)
-					@input.respond_to?(name, include_private) || super
-				end
-			end
-
 			def self.for(**options, &block)
 				self.new(block, **options)
 			end
-
-			def self.open(app = nil, input: $stdin, output: $stdout, task: ::Async::Task.current, **options, &block)
-				app ||= block
-				self.new(app, **options).accept(input: input, output: output, task: task)
+			
+			def self.with_raw_terminal(input, &block)
+				if input.respond_to?(:tty?) && input.tty? && input.respond_to?(:raw)
+					input.raw(&block)
+				else
+					block.call
+				end
 			end
 
+			
+			def self.open(app = nil, input: $stdin, output: $stdout, env: ENV, **options, &block)
+				app ||= block
+				server = self.new(app, **options)
+
+				case env["HTTY"]
+				when "0"
+					raise DisabledError, "HTTY is disabled!"
+				when nil
+					$stderr.puts "HTTY is not supported by this environment, visit https://htty.dev for more information."
+					raise UnsupportedError, "HTTY is not supported by this environment"
+				end
+				
+				Sync do |task|
+					with_raw_terminal(input) do
+						stream = ::IO::Stream::Duplex(input, output)
+						server.accept(stream, task: task)
+					end
+				end
+			end
+			
 			def initialize(app, protocol: Protocol::HTTY)
 				super(app)
 				@protocol = protocol
 			end
-
+			
 			attr :protocol
-
-			def accept(input:, output:, task: ::Async::Task.current)
-				with_raw_terminal(input) do
-					connection = @protocol.server(input: RawInput.new(input), output: output)
-
-					connection.each do |request|
-						self.call(request)
-					end
-
-					task.children.each(&:wait)
-				ensure
-					connection&.close
+			
+			def accept(stream, task: ::Async::Task.current)
+				connection = @protocol.server(stream)
+				
+				connection.each do |request|
+					self.call(request)
 				end
-			end
-
-			private
-
-			def with_raw_terminal(input)
-				if input.respond_to?(:tty?) && input.tty? && input.respond_to?(:raw)
-					input.raw do
-						yield
-					end
-				else
-					yield
+				
+				Array(task.children).each(&:wait)
+			ensure
+				if connection and !connection.closed?
+					connection.send_goaway
+					connection.close
 				end
 			end
 		end
