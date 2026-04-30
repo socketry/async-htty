@@ -1,0 +1,14 @@
+# Automatically generated context index for Utopia::Project guides.
+# Do not edit then files in this directory directly, instead edit the guides and then run `bake utopia:project:agent:context:update`.
+---
+description: An Async server runtime for HTTY sessions that carry HTTP/2 over terminal
+  side channels.
+metadata:
+  documentation_uri: https://socketry.github.io/async-htty/
+  source_code_uri: https://github.com/socketry/async-htty.git
+files:
+- path: getting-started.md
+  title: Getting Started
+  description: This guide explains how to get started with `async-htty` as an Async-compatible
+    runtime for HTTY sessions carrying plaintext HTTP/2 (`h2c`) over a DCS-bootstrapped
+    raw terminal transport.

@@ -8,11 +8,13 @@
 
 Please see the [project documentation](https://socketry.github.io/async-htty/) for more details.
 
-	- [Getting Started](https://socketry.github.io/async-htty/guides/getting-started/index) - This guide explains how to run an `Async::HTTY` server and serve a simple HTTP/2 application over HTTY.
+  - [Getting Started](https://socketry.github.io/async-htty/guides/getting-started/index) - This guide explains how to get started with `async-htty` as an Async-compatible runtime for HTTY sessions carrying plaintext HTTP/2 (`h2c`) over a DCS-bootstrapped raw terminal transport.
 
 ## Releases
 
-There are no documented releases.
+Please see the [project releases](https://socketry.github.io/async-htty/releases/index) for all releases.
+
+### v0.1.0
 
 ## Contributing
 
