@@ -6,6 +6,7 @@
 require "protocol/htty"
 
 require "async/http/protocol/http2"
+require_relative "htty/server"
 
 module Async
 	module HTTY
@@ -24,7 +25,7 @@ module Async
 				def self.server(stream, settings: ::Async::HTTP::Protocol::HTTP2::SERVER_SETTINGS)
 					stream = ::Protocol::HTTY::Stream.open(stream, bootstrap: :write)
 					
-					server = ::Async::HTTP::Protocol::HTTP2::Server.new(stream)
+					server = Server.new(stream)
 					server.read_connection_preface(settings)
 					server.start_connection
 					

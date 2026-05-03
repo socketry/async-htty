@@ -4,12 +4,48 @@
 # Copyright, 2026, by Samuel Williams.
 
 require "async"
+require "protocol/http/body/writable"
 require "protocol/http/request"
 require "protocol/http/response"
 require "protocol/http2"
+require "protocol/http2/client"
+require "protocol/http2/stream"
+require "rbconfig"
 require "async/htty"
 
+require "async/htty/pty_stream"
+
+class EchoResponseStream < Protocol::HTTP2::Stream
+	attr :response_headers
+	attr :body
+	
+	def initialize(...)
+		super
+		@response_headers = []
+		@body = +"".b
+	end
+	
+	def process_headers(frame)
+		@response_headers = super
+	end
+	
+	def process_data(frame)
+		data = super
+		@body << data.b if data
+		return data
+	end
+end
+
+class EchoClient < Protocol::HTTP2::Client
+	def create_stream(id = next_stream_id)
+		EchoResponseStream.create(self, id)
+	end
+end
+
 describe Async::HTTY::Protocol::HTTY do
+	let(:root) {File.expand_path("../../../..", __dir__)}
+	let(:ruby_load_path) {File.join(root, "lib")}
+	
 	def make_pipes
 		server_input, client_output = IO.pipe
 		client_input, server_output = IO.pipe
@@ -36,6 +72,29 @@ describe Async::HTTY::Protocol::HTTY do
 		IO::Stream::Duplex(pipes[:server_input], pipes[:server_output])
 	end
 	
+	def spawn_fixture(name)
+		environment = {
+			"HTTY" => "1",
+			"RUBYLIB" => [ruby_load_path, ENV["RUBYLIB"]].compact.join(":"),
+		}
+		executable = File.join(root, "fixtures", "async", "htty", "executables", name)
+		
+		PTY.spawn(environment, RbConfig.ruby, executable)
+	end
+	
+	def with_fixture(name)
+		input, output, pid = spawn_fixture(name)
+		input.binmode
+		output.binmode
+		
+		stream = Async::HTTY::PTYStream.new(input, output)
+		
+		yield stream
+	ensure
+		stream&.close
+		Process.wait(pid) rescue nil
+	end
+	
 	it "can carry an HTTP/2 request over HTTY bootstrap and raw transport" do
 		pipes = make_pipes
 		
@@ -54,6 +113,95 @@ describe Async::HTTY::Protocol::HTTY do
 			expect(response.status).to be == 200
 			expect(response.read).to be == "Hello World"
 		ensure
+			client&.close
+			server_task&.stop
+			close_pipes(pipes)
+		end
+	end
+	
+	it "round trips all byte values over a real PTY" do
+		payload = (0x00..0xff).to_a.pack("C*")
+		
+		with_fixture("echo_body.rb") do |stream|
+			Protocol::HTTY::Stream.new(stream).read_bootstrap
+			
+			framer = Protocol::HTTP2::Framer.new(stream)
+			client = EchoClient.new(framer)
+			client.send_connection_preface
+			
+			request = client.create_stream
+			request.send_headers(
+				[
+					[":method", "POST"],
+					[":path", "/echo"],
+					[":scheme", "http"],
+					[":authority", "htty.local"],
+					["content-length", payload.bytesize.to_s],
+					["content-type", "application/octet-stream"],
+				]
+			)
+			request.send_data(payload)
+			request.send_data(nil)
+			
+			until request.closed?
+				client.read_frame
+			end
+			
+			expect(request.response_headers.to_h[":status"]).to be == "200"
+			expect(request.body).to be == payload
+		ensure
+			client&.send_goaway
+			client&.close
+		end
+	end
+	
+	it "returns from accept when the client sends GOAWAY while a response body is active" do
+		pipes = make_pipes
+		body = Protocol::HTTP::Body::Writable.new
+		
+		Sync do |task|
+			request_started = Async::Notification.new
+			server_finished = Async::Notification.new
+			
+			server = Async::HTTY::Server.for do |request|
+				request_started.signal
+				Protocol::HTTP::Response[200, {}, body]
+			end
+			
+			server_task = task.async do
+				server.accept(server_stream(pipes))
+			ensure
+				server_finished.signal
+			end
+			
+			stream = Protocol::HTTY::Stream.open(client_stream(pipes), bootstrap: :read)
+			framer = Protocol::HTTP2::Framer.new(stream)
+			client = Protocol::HTTP2::Client.new(framer)
+			client.send_connection_preface
+			
+			request = client.create_stream
+			request.send_headers(
+				[[":method", "GET"], [":path", "/"], [":scheme", "http"], [":authority", "htty.local"]],
+				Protocol::HTTP2::END_STREAM
+			)
+			
+			request_started.wait
+			client.send_goaway
+			
+			task.with_timeout(1) do
+				server_finished.wait
+			end
+			
+			frame = task.with_timeout(1) do
+				loop do
+					frame = framer.read_frame(client.local_settings.maximum_frame_size)
+					break frame if frame.is_a?(Protocol::HTTP2::GoawayFrame)
+				end
+			end
+			
+			expect(frame).to be(:is_a?, Protocol::HTTP2::GoawayFrame)
+		ensure
+			body.close
 			client&.close
 			server_task&.stop
 			close_pipes(pipes)
