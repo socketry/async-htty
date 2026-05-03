@@ -24,9 +24,8 @@ module Async
 					block.call
 				end
 			end
-
 			
-			def self.open(app = nil, input: $stdin, output: $stdout, env: ENV, **options, &block)
+			def self.open(app = nil, input: $stdin, output: $stdout, error: $stderr, env: ENV, **options, &block)
 				app ||= block
 				server = self.new(app, **options)
 
@@ -37,12 +36,37 @@ module Async
 					$stderr.puts "HTTY is not supported by this environment, visit https://htty.dev for more information."
 					raise UnsupportedError, "HTTY is not supported by this environment"
 				end
+
+				unless input.respond_to?(:tty?) && input.tty?
+					raise UnsupportedError, "HTTY requires a TTY input stream"
+				end
+				
+				original_input = input.dup
+				original_output = output.dup
+				original_error = error.dup
+				
+				stream = ::IO::Stream::Duplex(original_input, original_output)
+				input.reopen(File::NULL)
+				output.reopen(File::NULL)
+				error.reopen(File::NULL)
 				
 				Sync do |task|
-					with_raw_terminal(input) do
-						stream = ::IO::Stream::Duplex(input, output)
+					with_raw_terminal(original_input) do
 						server.accept(stream, task: task)
 					end
+				end
+				
+			ensure
+				if original_input
+					input.reopen(original_input)
+				end
+				
+				if original_output
+					output.reopen(original_output)
+				end
+				
+				if original_error
+					error.reopen(original_error)
 				end
 			end
 			
