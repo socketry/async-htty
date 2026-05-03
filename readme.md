@@ -14,7 +14,14 @@ Please see the [project documentation](https://socketry.github.io/async-htty/) f
 
 Please see the [project releases](https://socketry.github.io/async-htty/releases/index) for all releases.
 
+### v0.2.0
+
+  - Reopen `stdin`, `stdout`, and `stderr` to null devices to prevent output from interfering with HTTY's byte stream.
+  - Guard against non-TTY input streams, which are not supported by HTTY.
+
 ### v0.1.0
+
+  - Initial implementation.
 
 ## Contributing
 
