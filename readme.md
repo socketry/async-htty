@@ -14,6 +14,11 @@ Please see the [project documentation](https://socketry.github.io/async-htty/) f
 
 Please see the [project releases](https://socketry.github.io/async-htty/releases/index) for all releases.
 
+### v0.2.1
+
+  - Send a server-side GOAWAY when the HTTY client closes an HTTP/2 session, allowing terminal clients to detach cleanly.
+  - Add PTY coverage for binary request/response bodies across the full byte range.
+
 ### v0.2.0
 
   - Reopen `stdin`, `stdout`, and `stderr` to null devices to prevent output from interfering with HTTY's byte stream.
