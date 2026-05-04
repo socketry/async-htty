@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.3.0
 
   - Pass explicit terminal input and output endpoints into `Protocol::HTTY::Stream`, avoiding buffered duplex reads across the HTTY HTTP/2 transport.
   - Expect the HTTY protocol adapter to receive a prepared `Protocol::HTTY::Stream` instance before performing bootstrap and HTTP/2 setup.

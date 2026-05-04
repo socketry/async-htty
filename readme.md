@@ -14,6 +14,11 @@ Please see the [project documentation](https://socketry.github.io/async-htty/) f
 
 Please see the [project releases](https://socketry.github.io/async-htty/releases/index) for all releases.
 
+### v0.3.0
+
+  - Pass explicit terminal input and output endpoints into `Protocol::HTTY::Stream`, avoiding buffered duplex reads across the HTTY HTTP/2 transport.
+  - Expect the HTTY protocol adapter to receive a prepared `Protocol::HTTY::Stream` instance before performing bootstrap and HTTP/2 setup.
+
 ### v0.2.1
 
   - Send a server-side GOAWAY when the HTTY client closes an HTTP/2 session, allowing terminal clients to detach cleanly.
