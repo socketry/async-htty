@@ -65,11 +65,11 @@ describe Async::HTTY::Protocol::HTTY do
 	end
 	
 	def client_stream(pipes)
-		IO::Stream::Duplex(pipes[:client_input], pipes[:client_output])
+		Protocol::HTTY::Stream.new(pipes[:client_input], pipes[:client_output])
 	end
 	
 	def server_stream(pipes)
-		IO::Stream::Duplex(pipes[:server_input], pipes[:server_output])
+		Protocol::HTTY::Stream.new(pipes[:server_input], pipes[:server_output])
 	end
 	
 	def spawn_fixture(name)
@@ -123,7 +123,8 @@ describe Async::HTTY::Protocol::HTTY do
 		payload = (0x00..0xff).to_a.pack("C*")
 		
 		with_fixture("echo_body.rb") do |stream|
-			Protocol::HTTY::Stream.new(stream).read_bootstrap
+			stream = Protocol::HTTY::Stream.new(stream.input, stream.output)
+			stream.read_bootstrap
 			
 			framer = Protocol::HTTP2::Framer.new(stream)
 			client = EchoClient.new(framer)
@@ -174,7 +175,8 @@ describe Async::HTTY::Protocol::HTTY do
 				server_finished.signal
 			end
 			
-			stream = Protocol::HTTY::Stream.open(client_stream(pipes), bootstrap: :read)
+			stream = client_stream(pipes)
+			stream.read_bootstrap
 			framer = Protocol::HTTP2::Framer.new(stream)
 			client = Protocol::HTTP2::Client.new(framer)
 			client.send_connection_preface

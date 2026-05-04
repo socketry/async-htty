@@ -88,8 +88,8 @@ describe Async::HTTY::Server do
 		
 		protocol.define_singleton_method(:server) do |stream|
 			reopened_to_null = [input.reopened_to_null?, output.reopened_to_null?, error.reopened_to_null?]
-			duplex_input = stream.io.input
-			duplex_output = stream.io.output
+			duplex_input = stream.input
+			duplex_output = stream.output
 			
 			stream.write("response", flush: true)
 			

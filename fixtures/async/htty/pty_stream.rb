@@ -14,6 +14,9 @@ module Async
 				@buffer = +"".b
 			end
 			
+			attr :input
+			attr :output
+			
 			def read(length)
 				while @buffer.bytesize < length
 					@buffer << @input.readpartial(4096).b

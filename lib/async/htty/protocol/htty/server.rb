@@ -12,9 +12,10 @@ module Async
 				class Server < ::Async::HTTP::Protocol::HTTP2::Server
 					def receive_goaway(frame)
 						super
-
-						unless self.framer.nil?
+						
+						if framer = self.framer
 							self.send_goaway
+							framer.flush
 						end
 					end
 				end

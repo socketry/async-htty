@@ -45,7 +45,7 @@ module Async
 				original_output = output.dup
 				original_error = error.dup
 				
-				stream = ::IO::Stream::Duplex(original_input, original_output)
+				stream = ::Protocol::HTTY::Stream.new(original_input, original_output)
 				input.reopen(File::NULL)
 				output.reopen(File::NULL)
 				error.reopen(File::NULL)
