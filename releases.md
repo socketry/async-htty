@@ -1,6 +1,6 @@
 # Releases
 
-## Unreleased
+## v0.4.0
 
   - Suppress errors from `send_goaway` during connection cleanup to prevent shutdown exceptions from propagating.
   - Support redirecting server-side stderr to a file via the `HTTY_ERROR_LOG` environment variable, enabling debug logging without corrupting the HTTY byte stream.

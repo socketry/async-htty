@@ -14,6 +14,11 @@ Please see the [project documentation](https://socketry.github.io/async-htty/) f
 
 Please see the [project releases](https://socketry.github.io/async-htty/releases/index) for all releases.
 
+### v0.4.0
+
+  - Suppress errors from `send_goaway` during connection cleanup to prevent shutdown exceptions from propagating.
+  - Support redirecting server-side stderr to a file via the `HTTY_ERROR_LOG` environment variable, enabling debug logging without corrupting the HTTY byte stream.
+
 ### v0.3.0
 
   - Pass explicit terminal input and output endpoints into `Protocol::HTTY::Stream`, avoiding buffered duplex reads across the HTTY HTTP/2 transport.
