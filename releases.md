@@ -1,5 +1,9 @@
 # Releases
 
+## Unreleased
+
+  - Suppress errors from `send_goaway` during connection cleanup to prevent shutdown exceptions from propagating.
+
 ## v0.3.0
 
   - Pass explicit terminal input and output endpoints into `Protocol::HTTY::Stream`, avoiding buffered duplex reads across the HTTY HTTP/2 transport.

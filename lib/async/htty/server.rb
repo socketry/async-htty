@@ -87,7 +87,7 @@ module Async
 				Array(task.children).each(&:wait)
 			ensure
 				if connection and !connection.closed?
-					connection.send_goaway
+					connection.send_goaway rescue nil
 					connection.close
 				end
 			end
