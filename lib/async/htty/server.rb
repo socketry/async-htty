@@ -48,7 +48,13 @@ module Async
 				stream = ::Protocol::HTTY::Stream.new(original_input, original_output)
 				input.reopen(File::NULL)
 				output.reopen(File::NULL)
-				error.reopen(File::NULL)
+				
+				# Redirect error output to a file if specified, otherwise discard it:
+				if error_log = ENV.fetch("HTTY_ERROR_LOG", nil)
+					error.reopen(File.open(error_log, "a"))
+				else
+					error.reopen(File::NULL)
+				end
 				
 				Sync do |task|
 					with_raw_terminal(original_input) do
