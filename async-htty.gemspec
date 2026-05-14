@@ -27,5 +27,5 @@ Gem::Specification.new do |spec|
 	spec.add_dependency "async", "~> 2.39"
 	spec.add_dependency "async-http", "~> 0.88"
 	spec.add_dependency "protocol-http", "~> 0.62"
-	spec.add_dependency "protocol-htty", "~> 0.3"
+	spec.add_dependency "protocol-htty", "~> 0.4"
 end
